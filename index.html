@@ -1,13 +1,78 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>att-web</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Adventist Tamil Tool | தமிழ் அட்வென்டிஸ்ட் ஆராதனை வளங்கள்</title>
+
+  <!-- Primary SEO Meta Tags -->
+  <meta name="description" content="Adventist Tamil Tool (ATT) - Daily Manna, Tamil Sabbath School Lessons, Zion Songs, Thirumarai Songs, and EGW Spiritual Library for Seventh-day Adventists.">
+  <meta name="keywords" content="Adventist Tamil Tool, Tamil SDA Songs, Seeyon Iniya Geethangal, Thirumarai Thirupaadalgal, Sabbath School Lesson Tamil, Ellen G White Tamil Books, Todays Manna Tamil">
+  <meta name="author" content="Pr. KSM - Adventist Tamil Tool">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://adventisttamil.app/">
+  <meta property="og:title" content="Adventist Tamil Tool | தமிழ் அட்வென்டிஸ்ட் ஆராதனை வளங்கள்">
+  <meta property="og:description" content="Access Daily Manna, Sabbath School Lessons, SDA Songbooks, and Spiritual Books in Tamil online and offline.">
+  <meta property="og:image" content="assets/icon.png">
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Adventist Tamil Tool">
+  <meta name="twitter:description" content="Tamil Adventist Worship Tools, Hymnals, Devotions, and Sabbath School Lessons.">
+  <meta name="twitter:image" content="assets/icon.png">
+
+  <!-- Mobile & PWA Theme Setup -->
+  <meta name="theme-color" content="#0A1929">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+
+  <!-- Core Stylesheet Link -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Main App Shell -->
+  <div id="app">
+    <header class="app-header">
+      <div class="header-logo-area">
+        <h1 class="app-title">Adventist Tamil Tool</h1>
+      </div>
+      <p class="app-motto">“Abide in Christ, and be kept by His power.” – DA 324</p>
+    </header>
+
+    <main id="main-content" class="content-container">
+      <!-- Dynamic Views will render here via JavaScript -->
+    </main>
+
+    <!-- Bottom Tab Navigation -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="navigate('home')">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" onclick="navigate('songs')">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <span>Songs</span>
+      </div>
+      <div class="nav-item" onclick="navigate('books')">
+        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+        <span>Books</span>
+      </div>
+      <div class="nav-item" onclick="navigate('about')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        <span>About</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Data Files (Loads before app logic) -->
+  <script src="data/zionSongs.js"></script>
+  
+  <!-- Core App Logic -->
+  <script src="js/app.js"></script>
+</body>
 </html>
