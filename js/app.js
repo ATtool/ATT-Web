@@ -58,7 +58,13 @@ function navigate(viewName) {
 
   switch (viewName) {
     case 'home': renderHome(container); break;
-    case 'songs': renderSongsMenu(container); break;
+    case 'songs': 
+      if (typeof renderSongsMainHub === 'function') {
+        renderSongsMainHub(container);
+      } else {
+        renderSongsMenu(container);
+      }
+      break;
     case 'books': renderBooksMenu(container); break;
     case 'about': renderAbout(container); break;
     default: renderHome(container);
@@ -72,21 +78,25 @@ function renderHome(container) {
   const formattedDate = today.toLocaleDateString('ta-IN', options);
 
   container.innerHTML = `
-    <div class="date-badge">${formattedDate}</div>
-    <section class="card devotion-card" id="manna-card">
-      <div class="card-header">
-        <h2 class="card-title">✨ இன்றைய மன்னா (Today's Manna)</h2>
+    <div class="date-badge" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; text-align: center; margin-bottom: 16px; color: var(--color-gold);">${formattedDate}</div>
+    <section class="card devotion-card" id="manna-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-bottom: 18px;">
+      <div class="card-header" style="margin-bottom: 12px;">
+        <h2 class="card-title" style="color: var(--color-primary); font-size: 1.15rem;">✨ இன்றைய மன்னா (Today's Manna)</h2>
       </div>
       <div id="manna-content" class="card-body">
-        <p class="loading-text">மன்னாவை ஏற்றுகிறது (Loading devotion)...</p>
+        <p class="loading-text" style="color: var(--text-secondary); font-size: 0.9rem;">மன்னாவை ஏற்றுகிறது (Loading devotion)...</p>
       </div>
     </section>
-    <section class="hub-grid">
-      <div class="hub-card" onclick="navigate('songs')">
-        <span class="hub-icon">🎵</span><h3>பாடல்கள்</h3><p>சீயோன் & திருமறைப் பாடல்கள்</p>
+    <section class="hub-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      <div class="hub-card" onclick="navigate('songs')" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; text-align: center; cursor: pointer;">
+        <span class="hub-icon" style="font-size: 1.8rem; display: block; margin-bottom: 6px;">🎵</span>
+        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 2px;">பாடல்கள்</h3>
+        <p style="color: var(--text-secondary); font-size: 0.75rem;">சீயோன் & திருமறை</p>
       </div>
-      <div class="hub-card" onclick="navigate('books')">
-        <span class="hub-icon">📚</span><h3>நூலகம்</h3><p>EGW ஆவிக்குரிய புத்தகங்கள்</p>
+      <div class="hub-card" onclick="navigate('books')" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; text-align: center; cursor: pointer;">
+        <span class="hub-icon" style="font-size: 1.8rem; display: block; margin-bottom: 6px;">📚</span>
+        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 2px;">நூலகம்</h3>
+        <p style="color: var(--text-secondary); font-size: 0.75rem;">EGW புத்தகங்கள்</p>
       </div>
     </section>
   `;
@@ -106,103 +116,23 @@ async function fetchTodaysManna() {
 
     if (devotion) {
       mannaContainer.innerHTML = `
-        <h3 class="manna-heading">${devotion.title || 'இன்றைய தியானம்'}</h3>
-        <blockquote class="manna-verse">“${devotion.verse || ''}”</blockquote>
-        <div class="manna-text">${(devotion.message || devotion.text || '').replace(/\n/g, '<br><br>')}</div>
+        <h3 class="manna-heading" style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 8px;">${devotion.title || 'இன்றைய தியானம்'}</h3>
+        <blockquote class="manna-verse" style="color: var(--color-gold); font-style: italic; border-left: 3px solid var(--color-gold); padding-left: 10px; margin-bottom: 12px; font-size: 0.95rem;">“${devotion.verse || ''}”</blockquote>
+        <div class="manna-text" style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.7; font-family: 'Tamil003', sans-serif;">${(devotion.message || devotion.text || '').replace(/\n/g, '<br><br>')}</div>
       `;
     } else {
-      mannaContainer.innerHTML = `<p class="info-text">இன்றைய நாளுக்கான மன்னா விரைவில் புதுப்பிக்கப்படும்.</p>`;
+      mannaContainer.innerHTML = `<p class="info-text" style="color: var(--text-secondary);">இன்றைய நாளுக்கான மன்னா விரைவில் புதுப்பிக்கப்படும்.</p>`;
     }
   } catch (error) {
-    mannaContainer.innerHTML = `<p class="error-text">மன்னாவை ஏற்றுவதில் சிக்கல் ஏற்பட்டது. தயவுசெய்து இணைய இணைப்பைச் சரிபார்க்கவும்.</p>`;
+    mannaContainer.innerHTML = `<p class="error-text" style="color: #FF3B30;">மன்னாவை ஏற்றுவதில் சிக்கல் ஏற்பட்டது. தயவுசெய்து இணைய இணைப்பைச் சரிபார்க்கவும்.</p>`;
   }
 }
 
-/* =========================================================
-   SONGBOOK LOGIC (Zion Songs)
-   ========================================================= */
+// Fallback Songbook Logic
 function renderSongsMenu(container) {
-  container.innerHTML = `
-    <div class="page-header" style="margin-bottom: 20px;">
-      <h2 style="color: var(--color-primary); font-size: 1.5rem;">🎵 சீயோன் கீதங்கள்</h2>
-      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">Zion Songs</p>
-      <input type="text" id="song-search" placeholder="Search by Number or Title..." 
-             oninput="filterSongs(this.value)" 
-             style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 1rem; outline: none;">
-    </div>
-    <div id="songs-list" style="padding-bottom: 80px;"></div>
-  `;
-  renderSongsList(typeof ZION_SONGS !== 'undefined' ? ZION_SONGS : []);
-}
-
-function renderSongsList(songsToRender) {
-  const listContainer = document.getElementById('songs-list');
-  if (!listContainer) return;
-
-  if (songsToRender.length === 0) {
-    listContainer.innerHTML = `<p style="text-align: center; color: var(--text-secondary); margin-top: 30px;">No songs found.</p>`;
-    return;
+  if (typeof renderSongsMainHub === 'function') {
+    renderSongsMainHub(container);
   }
-
-  listContainer.innerHTML = songsToRender.map(song => `
-    <div class="song-card" onclick="openSong(${song.id})" style="display: flex; align-items: center; background: var(--bg-card); padding: 12px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 10px; cursor: pointer;">
-      <div style="width: 40px; height: 40px; border-radius: 20px; background: var(--glow-color); border: 1px solid var(--color-primary); color: var(--color-primary); display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">
-        ${song.song_number}
-      </div>
-      <div>
-        <div style="color: var(--text-primary); font-size: 1.1rem; font-weight: bold; margin-bottom: 2px;">${song.title_tamil}</div>
-        <div style="color: var(--text-secondary); font-size: 0.8rem;">${song.title_english || 'Zion Songs'}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function filterSongs(query) {
-  if (typeof ZION_SONGS === 'undefined') return;
-  const lowerQuery = query.toLowerCase().trim();
-  const filtered = ZION_SONGS.filter(song =>
-    song.song_number.toString().includes(lowerQuery) ||
-    song.title_tamil.toLowerCase().includes(lowerQuery) ||
-    (song.title_english && song.title_english.toLowerCase().includes(lowerQuery))
-  );
-  renderSongsList(filtered);
-}
-
-function openSong(id) {
-  const song = ZION_SONGS.find(s => s.id === id);
-  if (!song) return;
-
-  const container = document.getElementById('main-content');
-  
-  // Neon Blue "~" Refrain Logic
-  const rawLines = song.lyrics.split('\n');
-  const processedLyrics = rawLines.map((line, index) => {
-    const trimmed = line.trim();
-    let isRefrain = false;
-    
-    // Check if line starts with ~ and next line is empty or doesn't exist
-    if (trimmed.startsWith('~')) {
-      const nextLine = rawLines[index + 1];
-      if (nextLine === undefined || nextLine.trim() === '') {
-        isRefrain = true;
-      }
-    }
-    
-    // Apply Neon Blue color to refrains
-    if (isRefrain) {
-      return `<span style="color: var(--color-primary); font-weight: bold;">${line}</span>`;
-    }
-    return line;
-  }).join('\n');
-
-  container.innerHTML = `
-    <div style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg-primary); z-index: 10;">
-      <button onclick="navigate('songs')" style="background: transparent; border: none; color: var(--color-gold); font-size: 1.5rem; margin-right: 15px; cursor: pointer;">⬅</button>
-      <h2 style="color: var(--color-primary); font-size: 1.2rem; flex: 1; margin: 0;">${song.song_number} - ${song.title_tamil}</h2>
-    </div>
-    <div style="font-size: 1.15rem; line-height: 2.2; padding-bottom: 100px; white-space: pre-wrap;">${processedLyrics}</div>
-  `;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Render EGW Books Library
@@ -218,7 +148,7 @@ function renderBooksMenu(container) {
 
     return `
       <div class="book-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 12px;">
-        <h3 class="book-title-ta" style="color: var(--text-primary); margin-bottom: 4px; font-size: 1.1rem;">${book.title_tamil}</h3>
+        <h3 class="book-title-ta" style="color: var(--text-primary); margin-bottom: 4px; font-size: 1.1rem; font-family: 'Tamil003', sans-serif;">${book.title_tamil}</h3>
         <p class="book-title-en" style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">${book.title_english}</p>
         <div class="book-actions">${actionButtons}</div>
       </div>
@@ -227,7 +157,7 @@ function renderBooksMenu(container) {
 
   container.innerHTML = `
     <div class="page-header" style="margin-bottom: 20px;">
-      <h2 style="color: var(--color-primary); font-size: 1.5rem;">📚 ஆவிக்குரிய நூலகம்</h2>
+      <h2 style="color: var(--color-primary); font-size: 1.5rem; font-family: 'Tamil003', sans-serif;">📚 ஆவிக்குரிய நூலகம்</h2>
       <p style="color: var(--text-secondary); font-size: 0.85rem;">Ellen G. White Writings in Tamil</p>
     </div>
     <div class="books-list" style="padding-bottom: 80px;">
