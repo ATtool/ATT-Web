@@ -11,6 +11,11 @@
   <meta name="author" content="Pr. KSM - Adventist Tamil Tool">
   <meta name="robots" content="index, follow">
 
+  <!-- Google Fonts Preconnect & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://adventisttamil.app/">
@@ -25,7 +30,7 @@
   <meta name="twitter:image" content="assets/icon.png">
 
   <!-- Mobile & PWA Theme Setup -->
-  <meta name="theme-color" content="#0A1929">
+  <meta name="theme-color" content="#070A10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -36,10 +41,16 @@
 </head>
 <body>
 
+  <!-- Toast Notification Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
   <!-- Main App Shell -->
   <div id="app">
     <header class="app-header">
       <div class="header-logo-area">
+        <svg class="header-cross-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10.5 2h3v7h7v3h-7v10h-3V12h-7V9h7V2z"/>
+        </svg>
         <h1 class="app-title">Adventist Tamil Tool</h1>
       </div>
       <p class="app-motto">“Abide in Christ, and be kept by His power.” – DA 324</p>
@@ -50,20 +61,20 @@
     </main>
 
     <!-- Bottom Tab Navigation -->
-    <nav class="bottom-nav">
-      <div class="nav-item active" onclick="navigate('home')">
+    <nav class="bottom-nav" aria-label="Main Navigation">
+      <div class="nav-item active" onclick="navigate('home')" id="nav-home" role="button" tabindex="0">
         <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         <span>Home</span>
       </div>
-      <div class="nav-item" onclick="navigate('songs')">
+      <div class="nav-item" onclick="navigate('songs')" id="nav-songs" role="button" tabindex="0">
         <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         <span>Songs</span>
       </div>
-      <div class="nav-item" onclick="navigate('books')">
+      <div class="nav-item" onclick="navigate('books')" id="nav-books" role="button" tabindex="0">
         <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
         <span>Books</span>
       </div>
-      <div class="nav-item" onclick="navigate('about')">
+      <div class="nav-item" onclick="navigate('about')" id="nav-about" role="button" tabindex="0">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
         <span>About</span>
       </div>
@@ -73,7 +84,6 @@
   <!-- Data Files (Loads before app logic) -->
   <script src="data/zionSongs.js"></script>
   <script src="data/thirumaraiSongs.js"></script>
-  
   
   <!-- Song Engine & Core App Logic -->
   <script src="js/songs.js"></script>

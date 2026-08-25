@@ -1,7 +1,7 @@
 /* =========================================================
    Adventist Tamil Tool (ATT) - Modular Songbook Engine
    Translates ZionScreen, ThirumaraiHopeScreen, ThirumaraiOldScreen,
-   and Global Search logic from React Native to Vanilla JS.
+   and Global Search logic with modern UI & Toast notifications.
    ========================================================= */
 
 const SONGS_STATE = {
@@ -29,10 +29,11 @@ const SONGS_STATE = {
   favsThiruOld: new Set(JSON.parse(localStorage.getItem('@thirumarai_old_favs') || '[]'))
 };
 
-// Colors matching React Native app design
+// Accent Colors matching app design system
 const ACCENT_ZION = '#30D158';
 const ACCENT_HOPE = '#FF9F0A';
 const ACCENT_OLD = '#00F0FF';
+const ACCENT_FAV = '#FF453A';
 
 /* ---------------------------------------------------------
    1. MAIN SONGS HUB MENU
@@ -40,11 +41,15 @@ const ACCENT_OLD = '#00F0FF';
 function renderSongsMainHub(container) {
   SONGS_STATE.activeBook = 'menu';
   
+  const zionCount = typeof ZION_SONGS !== 'undefined' ? ZION_SONGS.length : 0;
+  const thiruCount = typeof THIRUMARAI_SONGS !== 'undefined' ? THIRUMARAI_SONGS.length : 0;
+  const totalFavs = SONGS_STATE.favsZion.size + SONGS_STATE.favsThiruHope.size + SONGS_STATE.favsThiruOld.size;
+
   container.innerHTML = `
     <div class="songs-hub-header">
       <div>
         <h2 class="hub-title">பாடல் புத்தகங்கள்</h2>
-        <p class="hub-subtitle">SONG BOOKS</p>
+        <p class="hub-subtitle">SDA TAMIL HYMNALS</p>
       </div>
       <button class="icon-circle-btn" onclick="openGlobalSearchModal()" title="Global Search">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="#00F0FF"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -59,6 +64,7 @@ function renderSongsMainHub(container) {
         </div>
         <div class="card-text-wrap">
           <div class="card-ta-title">சீயோன் இனிய கீதங்கள்</div>
+          <div class="card-ta-subtitle">${zionCount} பாடல்கள் (Zion Songs)</div>
         </div>
         <span class="chevron-arrow">›</span>
       </div>
@@ -70,7 +76,7 @@ function renderSongsMainHub(container) {
         </div>
         <div class="card-text-wrap">
           <div class="card-ta-title">திருமறைத்திருப் பாடல்கள்</div>
-          <div class="card-ta-subtitle">( நம்பிக்கையின் கீதங்கள் புத்தக வரிசை )</div>
+          <div class="card-ta-subtitle">நம்பிக்கையின் கீதங்கள் வரிசை</div>
         </div>
         <span class="chevron-arrow">›</span>
       </div>
@@ -82,12 +88,30 @@ function renderSongsMainHub(container) {
         </div>
         <div class="card-text-wrap">
           <div class="card-ta-title">திருமறைத்திருப் பாடல்கள்</div>
-          <div class="card-ta-subtitle">( பழைய புத்தக வரிசை )</div>
+          <div class="card-ta-subtitle">பழைய புத்தக வரிசை</div>
+        </div>
+        <span class="chevron-arrow">›</span>
+      </div>
+
+      <!-- Box 4: Saved Favorites -->
+      <div class="songbook-card fav-border" onclick="openSongBookWithFavs()">
+        <div class="card-icon-wrap fav-bg">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="${ACCENT_FAV}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="card-text-wrap">
+          <div class="card-ta-title">என் விருப்பமான பாடல்கள்</div>
+          <div class="card-ta-subtitle">${totalFavs} பாடல்கள் சேமிக்கப்பட்டுள்ளது</div>
         </div>
         <span class="chevron-arrow">›</span>
       </div>
     </div>
   `;
+}
+
+function openSongBookWithFavs() {
+  openSongBook('zion');
+  SONGS_STATE.showFavoritesOnly = true;
+  renderBookListView();
 }
 
 /* ---------------------------------------------------------
@@ -118,7 +142,7 @@ function getMasterGlobalList() {
       if (s.Song_number_by_Nambikaiyen_Geethagal != null && s.Song_number_by_Nambikaiyen_Geethagal !== '') {
         master.push({
           global_id: `thiru_hope_${idx}`,
-          source: 'திருமறைத்திருப் பாடல் நம்பிக்கையின் கீதங்கள் புத்தக வரிசை',
+          source: 'திருமறைத்திருப் பாடல் (நம்பிக்கையின் கீதங்கள்)',
           sourceColor: ACCENT_HOPE,
           num: s.Song_number_by_Nambikaiyen_Geethagal,
           title_tamil: s.title_tamil || 'Unknown Title',
@@ -129,7 +153,7 @@ function getMasterGlobalList() {
       if (s.song_number != null && s.song_number !== '') {
         master.push({
           global_id: `thiru_old_${idx}`,
-          source: 'திருமறைத்திருப் பாடல் பழைய புத்தக வரிசை',
+          source: 'திருமறைத்திருப் பாடல் (பழைய வரிசை)',
           sourceColor: ACCENT_OLD,
           num: s.song_number,
           title_tamil: s.title_tamil || 'Unknown Title',
@@ -155,12 +179,12 @@ function openGlobalSearchModal() {
       </button>
       <div class="search-input-box">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="#8E94A3"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <input type="text" id="global-search-input" placeholder="Search all song books..." oninput="handleGlobalSearch(this.value)" autofocus />
+        <input type="text" id="global-search-input" placeholder="Search all song books (Number or Title)..." oninput="handleGlobalSearch(this.value)" autofocus />
       </div>
     </div>
     <div id="global-search-results" class="global-results-scroll">
       <div class="empty-search-placeholder">
-        <p>Type an exact song number, or part of a Tamil/English title...</p>
+        <p>Type a song number or Tamil / English title keyword...</p>
       </div>
     </div>
   `;
@@ -179,7 +203,7 @@ function handleGlobalSearch(query) {
   const term = query.toLowerCase().trim();
 
   if (!term) {
-    resultsContainer.innerHTML = `<div class="empty-search-placeholder"><p>Type an exact song number, or part of a Tamil/English title...</p></div>`;
+    resultsContainer.innerHTML = `<div class="empty-search-placeholder"><p>Type a song number or Tamil / English title keyword...</p></div>`;
     return;
   }
 
@@ -189,14 +213,13 @@ function handleGlobalSearch(query) {
     const tamStr = song.title_tamil ? song.title_tamil.toLowerCase() : '';
     const engStr = song.search_en ? song.search_en.toLowerCase() : '';
     
-    // Exact match for numbers, substring match for words
     const isExactNumber = numStr === term;
-    const isPartialText = tamStr.includes(term) || engStr.includes(term);
+    const isPartialText = tamStr.includes(term) || engStr.includes(term) || numStr.includes(term);
     return isExactNumber || isPartialText;
   }).slice(0, 70);
 
   if (filtered.length === 0) {
-    resultsContainer.innerHTML = `<div class="empty-search-placeholder"><p>No songs found.</p></div>`;
+    resultsContainer.innerHTML = `<div class="empty-search-placeholder"><p>No songs found matching "${query}".</p></div>`;
     return;
   }
 
@@ -209,7 +232,7 @@ function handleGlobalSearch(query) {
         <div class="global-song-title">${song.title_tamil}</div>
         <div class="global-song-source" style="color: ${song.sourceColor};">${song.source}</div>
       </div>
-      <span class="chevron-arrow" style="color: rgba(255,255,255,0.2);">›</span>
+      <span class="chevron-arrow">›</span>
     </div>
   `).join('');
 }
@@ -288,10 +311,14 @@ function saveBookFavorites(bookType) {
 function toggleBookFavorite(songId, event) {
   if (event) event.stopPropagation();
   const favSet = getBookFavoritesSet(SONGS_STATE.activeBook);
+  const isNowFav = !favSet.has(songId);
+
   if (favSet.has(songId)) {
     favSet.delete(songId);
+    if (typeof showToast === 'function') showToast('விருப்பப் பட்டியலிலிருந்து நீக்கப்பட்டது', '🤍');
   } else {
     favSet.add(songId);
+    if (typeof showToast === 'function') showToast('விருப்பப் பட்டியலில் சேமிக்கப்பட்டது!', '❤️');
   }
   saveBookFavorites(SONGS_STATE.activeBook);
   renderBookListView();
@@ -302,9 +329,6 @@ function renderBookListView() {
   const bookType = SONGS_STATE.activeBook;
   const rawSongs = getRawBookSongs(bookType);
   const favSet = getBookFavoritesSet(bookType);
-
-  // Compute Categories (Zion only)
-  const categories = ['All', ...new Set(rawSongs.map(s => s.category).filter(Boolean))];
 
   // Compute Alphabet Letters
   const lettersSet = new Set();
@@ -349,14 +373,14 @@ function renderBookListView() {
   container.innerHTML = `
     <div class="book-header-sticky">
       <div class="search-top-row">
-        <button class="back-arrow-btn" onclick="renderSongsMainHub(document.getElementById('main-content'))">
+        <button class="back-arrow-btn" onclick="renderSongsMainHub(document.getElementById('main-content'))" title="Back to Hymnbooks">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="#00F0FF"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
         </button>
 
         <div class="search-pill">
           <input type="${SONGS_STATE.isNumericKeyboard ? 'number' : 'text'}" 
                  id="song-search-input" 
-                 placeholder="${SONGS_STATE.isNumericKeyboard ? 'Search Number...' : 'ஏசுவின் / Yesuvin'}" 
+                 placeholder="${SONGS_STATE.isNumericKeyboard ? 'Search Number...' : 'தேடு / Search Title...'}" 
                  value="${SONGS_STATE.searchQuery}" 
                  oninput="onSongSearchInput(this.value)" />
           
@@ -412,13 +436,13 @@ function renderBookListView() {
       ` : `
         ${SONGS_STATE.selectedLetter !== 'All' ? `
           <div class="alphabet-grid-header" onclick="selectBackToAlphabetGrid()">
-            ← அகர வரிசைக்குச் செல் (Back)
+            ← அகர வரிசைக்குச் செல் (Back to Letters)
           </div>
         ` : ''}
 
         ${filtered.length === 0 ? `
           <div class="empty-search-placeholder">
-            <p>No songs found matching your search.</p>
+            <p>No songs found matching your filter/search.</p>
           </div>
         ` : `
           <div class="song-items-list">
@@ -444,16 +468,16 @@ function renderBookListView() {
 
     <!-- Floating Scroll To Top Button -->
     <button id="fab-scroll-top" class="fab-scroll" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
     </button>
   `;
 
-  // Attach scroll listener once to show/hide the button
+  // Attach FAB Scroll listener
   if (!window.hasFabListener) {
     window.addEventListener('scroll', () => {
       const fab = document.getElementById('fab-scroll-top');
       if (fab) {
-        if (window.scrollY > 300) {
+        if (window.scrollY > 250) {
           fab.classList.add('visible');
         } else {
           fab.classList.remove('visible');
@@ -534,13 +558,13 @@ function toggleSortMenuModal() {
   modal.innerHTML = `
     <div class="center-card-modal">
       <div class="modal-card-title">Sort Options</div>
-      <div class="modal-btn-row" onclick="applySortOption('number')">
+      <div class="modal-btn-row ${SONGS_STATE.sortOrder === 'number' ? 'selected' : ''}" onclick="applySortOption('number')">
         <span>🔢 எண் வரிசை (Number Order)</span>
       </div>
-      <div class="modal-btn-row" onclick="applySortOption('alpha')">
+      <div class="modal-btn-row ${SONGS_STATE.sortOrder === 'alpha' ? 'selected' : ''}" onclick="applySortOption('alpha')">
         <span>🔠 அகர வரிசை (Alphabetical)</span>
       </div>
-      <div class="modal-cancel-row" onclick="this.closest('#sort-modal').remove()">
+      <div class="modal-btn-row" style="color: var(--color-rose); text-align: center;" onclick="this.closest('#sort-modal').remove()">
         Cancel
       </div>
     </div>
@@ -574,7 +598,7 @@ function toggleCategoryModal() {
       </div>
       <div class="modal-list-scroll">
         ${categories.map(cat => `
-          <div class="modal-btn-row ${SONGS_STATE.selectedCategory === cat ? 'selected' : ''}" onclick="applyCategoryOption('${cat.replace(/'/g, "\'")}')">
+          <div class="modal-btn-row ${SONGS_STATE.selectedCategory === cat ? 'selected' : ''}" onclick="applyCategoryOption('${cat.replace(/'/g, "\\'")}')">
             ${cat}
           </div>
         `).join('')}
@@ -582,11 +606,8 @@ function toggleCategoryModal() {
     </div>
   `;
   
-  // Close modal when clicking outside the card
   modal.onclick = function(event) {
-    if (event.target === this) {
-      this.remove();
-    }
+    if (event.target === this) this.remove();
   };
 
   document.body.appendChild(modal);
@@ -623,21 +644,15 @@ function openSongFromIndex(index) {
 }
 
 function renderLyricModal(song, subtitle) {
-  // Remove existing lyric modal if present
   const existing = document.getElementById('lyric-reader-modal');
   if (existing) existing.remove();
 
-  // Parse Stanzas & Highlight Refrains starting with '~'
+  // Process Stanzas & Highlight Refrains starting with '~' or 'pallavi'
   const rawLines = (song.lyrics || '').split('\n');
-  const processedHtml = rawLines.map((line, idx) => {
+  const processedHtml = rawLines.map((line) => {
     const trimmed = line.trim();
-    let isRefrain = false;
     if (trimmed.startsWith('~')) {
-      const nextLine = rawLines[idx + 1];
-      if (nextLine === undefined || nextLine.trim() === '') isRefrain = true;
-    }
-    if (isRefrain) {
-      return `<span style="color: var(--color-primary); font-weight: bold;">${line}</span>`;
+      return `<span class="lyric-refrain">${trimmed.replace(/^~/, '')}</span>`;
     }
     return line;
   }).join('<br>');
@@ -650,7 +665,7 @@ function renderLyricModal(song, subtitle) {
 
   modal.innerHTML = `
     <div class="lyric-reader-header">
-      <button class="back-arrow-btn" onclick="closeLyricReader()">
+      <button class="back-arrow-btn" onclick="closeLyricReader()" title="Close Reader">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="#FFD700"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
       </button>
 
@@ -662,8 +677,8 @@ function renderLyricModal(song, subtitle) {
       </div>
 
       <div class="lyric-header-actions">
-        <button class="text-pref-btn" onclick="toggleTextSettingsModal()">Aa</button>
-        <button class="share-btn" onclick="shareSongLyrics()">
+        <button class="text-pref-btn" onclick="toggleTextSettingsModal()" title="Text Settings">Aa</button>
+        <button class="share-btn" onclick="shareSongLyrics()" title="Share / Copy">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="#FFD700"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
         </button>
       </div>
@@ -673,23 +688,21 @@ function renderLyricModal(song, subtitle) {
       ${processedHtml}
     </div>
 
-    <!-- Floating Navigation for Prev / Next / Favorite -->
+    <!-- Floating Navigation Bar -->
     ${SONGS_STATE.selectedSongIndex !== null ? `
       <div class="bottom-float-bar">
         ${SONGS_STATE.selectedSongIndex > 0 ? `
-          <button class="float-nav-btn" onclick="changeSongStep(-1)">
+          <button class="float-nav-btn" onclick="changeSongStep(-1)" title="Previous Song">
             ‹
           </button>
         ` : '<div></div>'}
 
-        <div class="float-center-controls">
-          <button class="heart-float-btn" onclick="toggleFavoriteInsideReader(${song.id})">
-            ${isFav ? '❤️' : '🤍'}
-          </button>
-        </div>
+        <button class="heart-float-btn" onclick="toggleFavoriteInsideReader(${song.id})" title="Toggle Favorite">
+          ${isFav ? '❤️' : '🤍'}
+        </button>
 
         ${SONGS_STATE.selectedSongIndex < SONGS_STATE.activeSongList.length - 1 ? `
-          <button class="float-nav-btn" onclick="changeSongStep(1)">
+          <button class="float-nav-btn" onclick="changeSongStep(1)" title="Next Song">
             ›
           </button>
         ` : '<div></div>'}
@@ -726,10 +739,10 @@ function shareSongLyrics() {
   const shareText = `${song.song_number || song.id} - ${song.title_tamil}\n\n${song.lyrics}\n\n✨ Adventist Tamil Tool\nhttps://adventisttamil.app/`;
 
   if (navigator.share) {
-    navigator.share({ title: song.title_tamil, text: shareText });
-  } else {
+    navigator.share({ title: song.title_tamil, text: shareText }).catch(() => {});
+  } else if (navigator.clipboard) {
     navigator.clipboard.writeText(shareText);
-    alert('பாடல் வரிகள் நகலெடுக்கப்பட்டது (Copied to Clipboard)!');
+    if (typeof showToast === 'function') showToast('பாடல் வரிகள் நகலெடுக்கப்பட்டது!', '📋');
   }
 }
 
@@ -745,26 +758,26 @@ function toggleTextSettingsModal() {
     <div class="bottom-sheet-card">
       <div class="sheet-title-row">
         <h3>Reading Preferences</h3>
-        <button class="close-sheet-btn" onclick="this.closest('#text-settings-modal').remove()">✕</button>
+        <button class="modal-close-x-btn" onclick="this.closest('#text-settings-modal').remove()">✕</button>
       </div>
 
       <div class="setting-item">
-        <label>Title Size: <span id="val-title-size">${SONGS_STATE.titleSize}</span></label>
+        <label>Title Size: <span id="val-title-size">${SONGS_STATE.titleSize}px</span></label>
         <input type="range" min="16" max="30" value="${SONGS_STATE.titleSize}" oninput="updateReaderProp('titleSize', this.value)" />
       </div>
 
       <div class="setting-item">
-        <label>Lyrics Font Size: <span id="val-lyrics-size">${SONGS_STATE.lyricsSize}</span></label>
-        <input type="range" min="12" max="35" value="${SONGS_STATE.lyricsSize}" oninput="updateReaderProp('lyricsSize', this.value)" />
+        <label>Lyrics Font Size: <span id="val-lyrics-size">${SONGS_STATE.lyricsSize}px</span></label>
+        <input type="range" min="14" max="36" value="${SONGS_STATE.lyricsSize}" oninput="updateReaderProp('lyricsSize', this.value)" />
       </div>
 
       <div class="setting-item">
-        <label>Line Spacing: <span id="val-line-height">${SONGS_STATE.lyricsLineHeight}</span></label>
+        <label>Line Spacing: <span id="val-line-height">${SONGS_STATE.lyricsLineHeight}px</span></label>
         <input type="range" min="20" max="60" value="${SONGS_STATE.lyricsLineHeight}" oninput="updateReaderProp('lyricsLineHeight', this.value)" />
       </div>
 
       <div class="setting-item">
-        <label>Letter Spacing: <span id="val-spacing">${SONGS_STATE.lyricsSpacing}</span></label>
+        <label>Letter Spacing: <span id="val-spacing">${SONGS_STATE.lyricsSpacing}px</span></label>
         <input type="range" min="0" max="5" step="0.5" value="${SONGS_STATE.lyricsSpacing}" oninput="updateReaderProp('lyricsSpacing', this.value)" />
       </div>
 
@@ -783,22 +796,22 @@ function updateReaderProp(prop, val) {
     const el = document.querySelector('.lyric-song-title');
     const label = document.getElementById('val-title-size');
     if (el) el.style.fontSize = `${val}px`;
-    if (label) label.innerText = val;
+    if (label) label.innerText = `${val}px`;
   } else if (prop === 'lyricsSize') {
     const el = document.getElementById('lyric-scroll-body');
     const label = document.getElementById('val-lyrics-size');
     if (el) el.style.fontSize = `${val}px`;
-    if (label) label.innerText = val;
+    if (label) label.innerText = `${val}px`;
   } else if (prop === 'lyricsLineHeight') {
     const el = document.getElementById('lyric-scroll-body');
     const label = document.getElementById('val-line-height');
     if (el) el.style.lineHeight = `${val}px`;
-    if (label) label.innerText = val;
+    if (label) label.innerText = `${val}px`;
   } else if (prop === 'lyricsSpacing') {
     const el = document.getElementById('lyric-scroll-body');
     const label = document.getElementById('val-spacing');
     if (el) el.style.letterSpacing = `${val}px`;
-    if (label) label.innerText = val;
+    if (label) label.innerText = `${val}px`;
   }
 }
 

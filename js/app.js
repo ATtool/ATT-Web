@@ -5,6 +5,14 @@
 
 const MANNA_GIST_URL = 'https://gist.githubusercontent.com/ATtool/e3a8241e07503969cb06448a32eb4382/raw/manna.json';
 
+// Global App State
+const APP_STATE = {
+  mannaFontSize: 16,
+  currentDevotionText: '',
+  isSpeaking: false,
+  booksSearchQuery: ''
+};
+
 // Complete EGW Books Dataset
 const EGW_BOOKS_DATA = [
   { id: 'promises', title_tamil: 'ஆண்டவர் அருளிய வாக்குத்தத்தங்களும்', title_english: 'God Has Promised', pdf_url: 'https://drive.google.com/uc?export=download&id=10lMvcxSlx9QV7rHxBgEgZFQCokVWwlmN', website_url: null },
@@ -39,6 +47,21 @@ const EGW_BOOKS_DATA = [
   { id: 'marriage_relation', title_tamil: 'The Marriage Relation', title_english: 'The Marriage Relation', pdf_url: 'https://drive.google.com/uc?export=download&id=1y_1ZnLnCJOpvQQMWD84c9_BEjB9nvXc-', website_url: null }
 ];
 
+// Toast Notification Utility
+function showToast(message, icon = '✨') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `${icon} ${message}`;
+  
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 3000);
+}
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   navigate('home');
@@ -55,6 +78,12 @@ function navigate(viewName) {
 
   const container = document.getElementById('main-content');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Stop any active speech when navigating
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    APP_STATE.isSpeaking = false;
+  }
 
   switch (viewName) {
     case 'home': renderHome(container); break;
@@ -78,28 +107,64 @@ function renderHome(container) {
   const formattedDate = today.toLocaleDateString('ta-IN', options);
 
   container.innerHTML = `
-    <div class="date-badge" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; text-align: center; margin-bottom: 16px; color: var(--color-gold);">${formattedDate}</div>
-    <section class="card devotion-card" id="manna-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-bottom: 18px;">
-      <div class="card-header" style="margin-bottom: 12px;">
-        <h2 class="card-title" style="color: var(--color-primary); font-size: 1.15rem;">✨ இன்றைய மன்னா (Today's Manna)</h2>
+    <div style="text-align: center;">
+      <div class="date-badge">📅 ${formattedDate}</div>
+    </div>
+
+    <!-- Daily Devotional Manna Card -->
+    <section class="card devotion-card" id="manna-card">
+      <div class="card-header-flex">
+        <h2 class="card-title">✨ இன்றைய மன்னா</h2>
+        <div class="devotion-actions">
+          <button class="btn-icon-soft btn-audio-listen" id="btn-listen-manna" onclick="toggleSpeakDevotion()" title="Listen to Manna Voice">
+            🔊 <span id="listen-btn-text">கேட்க</span>
+          </button>
+          <button class="btn-icon-soft" onclick="copyDevotionVerse()" title="Copy Verse">
+            📋 நகல்
+          </button>
+        </div>
       </div>
+      
       <div id="manna-content" class="card-body">
-        <p class="loading-text" style="color: var(--text-secondary); font-size: 0.9rem;">மன்னாவை ஏற்றுகிறது (Loading devotion)...</p>
+        <p class="loading-text" style="color: var(--text-secondary); font-size: 0.9rem;">மன்னாவை ஏற்றுகிறது (Loading Daily Manna)...</p>
+      </div>
+
+      <!-- Devotional Text Controls -->
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">எழுத்து அளவு:</span>
+        <button class="btn-icon-soft" style="padding: 3px 8px;" onclick="changeMannaFontSize(-1)">A-</button>
+        <button class="btn-icon-soft" style="padding: 3px 8px;" onclick="changeMannaFontSize(1)">A+</button>
       </div>
     </section>
-    <section class="hub-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-      <div class="hub-card" onclick="navigate('songs')" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; text-align: center; cursor: pointer;">
-        <span class="hub-icon" style="font-size: 1.8rem; display: block; margin-bottom: 6px;">🎵</span>
-        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 2px;">பாடல்கள்</h3>
-        <p style="color: var(--text-secondary); font-size: 0.75rem;">சீயோன் & திருமறை</p>
+
+    <!-- Quick Action Hub Grid -->
+    <section class="hub-grid">
+      <div class="hub-card" onclick="navigate('songs')">
+        <span class="hub-icon">🎵</span>
+        <h3 class="hub-title-text">பாடல்கள்</h3>
+        <p class="hub-desc-text">சீயோன் & திருமறை</p>
       </div>
-      <div class="hub-card" onclick="navigate('books')" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; text-align: center; cursor: pointer;">
-        <span class="hub-icon" style="font-size: 1.8rem; display: block; margin-bottom: 6px;">📚</span>
-        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 2px;">நூலகம்</h3>
-        <p style="color: var(--text-secondary); font-size: 0.75rem;">EGW புத்தகங்கள்</p>
+
+      <div class="hub-card" onclick="navigate('books')">
+        <span class="hub-icon">📚</span>
+        <h3 class="hub-title-text">ஆவிக்குரிய நூலகம்</h3>
+        <p class="hub-desc-text">EGW புத்தகங்கள்</p>
+      </div>
+
+      <div class="hub-card" onclick="openFavoritesView()">
+        <span class="hub-icon">❤️</span>
+        <h3 class="hub-title-text">விருப்பமானவை</h3>
+        <p class="hub-desc-text">சேமித்த பாடல்கள்</p>
+      </div>
+
+      <div class="hub-card" onclick="navigate('about')">
+        <span class="hub-icon">✝️</span>
+        <h3 class="hub-title-text">ஆராதனை வழிகாட்டி</h3>
+        <p class="hub-desc-text">ATT செயலி தகவல்</p>
       </div>
     </section>
   `;
+
   fetchTodaysManna();
 }
 
@@ -115,16 +180,109 @@ async function fetchTodaysManna() {
     const devotion = rawData.devotions && rawData.devotions[dateKey];
 
     if (devotion) {
-      mannaContainer.innerHTML = `
-        <h3 class="manna-heading" style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 8px;">${devotion.title || 'இன்றைய தியானம்'}</h3>
-        <blockquote class="manna-verse" style="color: var(--color-gold); font-style: italic; border-left: 3px solid var(--color-gold); padding-left: 10px; margin-bottom: 12px; font-size: 0.95rem;">“${devotion.verse || ''}”</blockquote>
-        <div class="manna-text" style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.7; font-family: 'Tamil003', sans-serif;">${(devotion.message || devotion.text || '').replace(/\n/g, '<br><br>')}</div>
-      `;
+      renderDevotionText(devotion.title || 'இன்றைய தியானம்', devotion.verse || '', devotion.message || devotion.text || '');
     } else {
-      mannaContainer.innerHTML = `<p class="info-text" style="color: var(--text-secondary);">இன்றைய நாளுக்கான மன்னா விரைவில் புதுப்பிக்கப்படும்.</p>`;
+      // Graceful inspirational fallback if date key missing in gist
+      renderDevotionText(
+        'கர்த்தருடைய இரக்கங்கள் முடிவில்லாதவை', 
+        'அவைகள் காலைதோறும் புதியவைகள்; உமது உண்மை பெரிதாயிருக்கிறது. – புலம்பல் 3:22,23',
+        'தேவனின் புதிய இரக்கம் இன்று காலை உங்களை அரவணைக்கிறது. அவரது சர்வவல்லமையுள்ள கரத்தில் நம் வாழ்க்கையை ஒப்படைத்து, அவர் தரும் சமாதானத்தோடும் தைரியத்தோடும் இந்த நாளைத் தொடங்குவோம்.'
+      );
     }
   } catch (error) {
-    mannaContainer.innerHTML = `<p class="error-text" style="color: #FF3B30;">மன்னாவை ஏற்றுவதில் சிக்கல் ஏற்பட்டது. தயவுசெய்து இணைய இணைப்பைச் சரிபார்க்கவும்.</p>`;
+    // Offline / Network fallback
+    renderDevotionText(
+      'தேவனின் வாக்குத்தத்தம்', 
+      'பயப்படாதே, நான் உன்னுடனே இருக்கிறேன்; திகையாதே, நான் உன் தேவன். – ஏசாயா 41:10',
+      'அன்றாட வாழ்க்கையின் சோதனைகளில் கர்த்தர் நம்மைத் தாங்குவார். அவரது வார்த்தை நமக்கு வெளிச்சமும் நம்பிக்கையுமாய் இருக்கிறது.'
+    );
+  }
+}
+
+function renderDevotionText(title, verse, text) {
+  const mannaContainer = document.getElementById('manna-content');
+  if (!mannaContainer) return;
+
+  APP_STATE.currentDevotionText = `${title}. ${verse}. ${text}`;
+
+  mannaContainer.innerHTML = `
+    <h3 class="manna-heading">${title}</h3>
+    ${verse ? `<blockquote class="manna-verse" id="devotion-verse-el">“${verse}”</blockquote>` : ''}
+    <div class="manna-text" id="manna-text-body" style="font-size: ${APP_STATE.mannaFontSize}px;">
+      ${(text || '').replace(/\n/g, '<br><br>')}
+    </div>
+  `;
+}
+
+function changeMannaFontSize(delta) {
+  const newSize = Math.max(14, Math.min(26, APP_STATE.mannaFontSize + delta));
+  APP_STATE.mannaFontSize = newSize;
+  const textEl = document.getElementById('manna-text-body');
+  if (textEl) textEl.style.fontSize = `${newSize}px`;
+}
+
+function copyDevotionVerse() {
+  const verseEl = document.getElementById('devotion-verse-el');
+  const text = verseEl ? verseEl.innerText : APP_STATE.currentDevotionText;
+  if (!text) return;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+    showToast('வாக்குத்தத்த வசனம் நகலெடுக்கப்பட்டது!', '📋');
+  } else {
+    showToast('வாக்குத்தத்தம்: ' + text.substring(0, 30) + '...', '✨');
+  }
+}
+
+function toggleSpeakDevotion() {
+  if (!('speechSynthesis' in window)) {
+    showToast('உங்கள் உலாவியில் குரல் வாசிப்பு வசதி இல்லை.', '⚠️');
+    return;
+  }
+
+  const btn = document.getElementById('btn-listen-manna');
+  const btnText = document.getElementById('listen-btn-text');
+
+  if (APP_STATE.isSpeaking) {
+    window.speechSynthesis.cancel();
+    APP_STATE.isSpeaking = false;
+    if (btn) btn.classList.remove('playing');
+    if (btnText) btnText.innerText = 'கேட்க';
+    showToast('குரல் வாசிப்பு நிறுத்தப்பட்டது', '⏹️');
+  } else {
+    if (!APP_STATE.currentDevotionText) return;
+
+    const utterance = new SpeechSynthesisUtterance(APP_STATE.currentDevotionText);
+    utterance.rate = 0.9;
+    
+    // Select Tamil voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const taVoice = voices.find(v => v.lang.includes('ta') || v.lang.includes('TA'));
+    if (taVoice) utterance.voice = taVoice;
+
+    utterance.onend = () => {
+      APP_STATE.isSpeaking = false;
+      if (btn) btn.classList.remove('playing');
+      if (btnText) btnText.innerText = 'கேட்க';
+    };
+
+    window.speechSynthesis.speak(utterance);
+    APP_STATE.isSpeaking = true;
+    if (btn) btn.classList.add('playing');
+    if (btnText) btnText.innerText = 'நிறுத்து';
+    showToast('மன்னா வாசிக்கப்படுகிறது...', '🔊');
+  }
+}
+
+function openFavoritesView() {
+  if (typeof openSongBook === 'function') {
+    openSongBook('zion');
+    if (typeof SONGS_STATE !== 'undefined') {
+      SONGS_STATE.showFavoritesOnly = true;
+      if (typeof renderBookListView === 'function') renderBookListView();
+    }
+  } else {
+    navigate('songs');
   }
 }
 
@@ -137,44 +295,88 @@ function renderSongsMenu(container) {
 
 // Render EGW Books Library
 function renderBooksMenu(container) {
-  let booksHtml = EGW_BOOKS_DATA.map(book => {
+  APP_STATE.booksSearchQuery = '';
+
+  container.innerHTML = `
+    <div style="margin-bottom: 20px;">
+      <h2 style="color: var(--color-primary); font-size: 1.5rem; font-family: var(--font-tamil-title); margin-bottom: 4px;">📚 ஆவிக்குரிய நூலகம்</h2>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Ellen G. White Writings in Tamil</p>
+    </div>
+
+    <!-- Live Search Input for Books -->
+    <div class="search-pill books-search-box">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#8E94A3" style="margin-right: 8px;"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="books-search-input" placeholder="Search books in Tamil / English..." oninput="onBooksSearchInput(this.value)" />
+    </div>
+
+    <div id="books-list-container" class="books-list">
+      ${generateBooksListHtml(EGW_BOOKS_DATA)}
+    </div>
+  `;
+}
+
+function generateBooksListHtml(books) {
+  if (books.length === 0) {
+    return `<div class="empty-search-placeholder"><p>No books found matching your search.</p></div>`;
+  }
+
+  return books.map(book => {
     let actionButtons = '';
     if (book.website_url) {
-      actionButtons += `<a href="${book.website_url}" target="_blank" rel="noopener" class="btn btn-online" style="display: inline-block; padding: 8px 12px; background: rgba(255, 159, 10, 0.1); color: #FF9F0A; text-decoration: none; border-radius: 8px; font-size: 0.8rem; font-weight: bold; margin-right: 10px;">🌐 Read Online</a>`;
+      actionButtons += `<a href="${book.website_url}" target="_blank" rel="noopener" class="btn-online">🌐 Read Online</a>`;
     }
     if (book.pdf_url) {
-      actionButtons += `<a href="${book.pdf_url}" target="_blank" rel="noopener" class="btn btn-pdf" style="display: inline-block; padding: 8px 12px; background: rgba(48, 209, 88, 0.1); color: #30D158; text-decoration: none; border-radius: 8px; font-size: 0.8rem; font-weight: bold;">📥 PDF</a>`;
+      actionButtons += `<a href="${book.pdf_url}" target="_blank" rel="noopener" class="btn-pdf">📥 PDF Download</a>`;
     }
 
     return `
-      <div class="book-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 12px;">
-        <h3 class="book-title-ta" style="color: var(--text-primary); margin-bottom: 4px; font-size: 1.1rem; font-family: 'Tamil003', sans-serif;">${book.title_tamil}</h3>
-        <p class="book-title-en" style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">${book.title_english}</p>
+      <div class="book-card">
+        <h3 class="book-title-ta">${book.title_tamil}</h3>
+        <p class="book-title-en">${book.title_english}</p>
         <div class="book-actions">${actionButtons}</div>
       </div>
     `;
   }).join('');
+}
 
-  container.innerHTML = `
-    <div class="page-header" style="margin-bottom: 20px;">
-      <h2 style="color: var(--color-primary); font-size: 1.5rem; font-family: 'Tamil003', sans-serif;">📚 ஆவிக்குரிய நூலகம்</h2>
-      <p style="color: var(--text-secondary); font-size: 0.85rem;">Ellen G. White Writings in Tamil</p>
-    </div>
-    <div class="books-list" style="padding-bottom: 80px;">
-      ${booksHtml}
-    </div>
-  `;
+function onBooksSearchInput(val) {
+  const term = val.toLowerCase().trim();
+  const filtered = EGW_BOOKS_DATA.filter(b => 
+    b.title_tamil.toLowerCase().includes(term) || 
+    b.title_english.toLowerCase().includes(term)
+  );
+
+  const container = document.getElementById('books-list-container');
+  if (container) {
+    container.innerHTML = generateBooksListHtml(filtered);
+  }
 }
 
 // Render About Screen
 function renderAbout(container) {
   container.innerHTML = `
-    <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; text-align: center;">
-      <h2 style="color: var(--color-primary); margin-bottom: 10px;">Adventist Tamil Tool</h2>
-      <p class="app-motto" style="color: var(--color-gold); font-style: italic; margin-bottom: 15px;">“Abide in Christ, and be kept by His power.” – DA 324</p>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-        Tamil Adventist Worship Tools, Devotions, Hymnals, and EGW Spiritual Library.<br><br>
-        Web Version PWA 1.0<br>Built exclusively for Pr. KSM
+    <div class="card" style="text-align: center; padding: 24px 18px;">
+      <svg class="header-cross-icon" viewBox="0 0 24 24" style="width: 42px; height: 42px; margin-bottom: 12px;">
+        <path d="M10.5 2h3v7h7v3h-7v10h-3V12h-7V9h7V2z"/>
+      </svg>
+      
+      <h2 style="color: var(--color-primary); margin-bottom: 6px; font-family: var(--font-main); font-size: 1.4rem;">Adventist Tamil Tool</h2>
+      <p class="app-motto" style="color: var(--color-gold); margin-bottom: 18px; font-size: 0.85rem;">“Abide in Christ, and be kept by His power.” – DA 324</p>
+      
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; text-align: left; margin-bottom: 18px;">
+        <h4 style="color: var(--color-gold); margin-bottom: 8px; font-size: 0.95rem;">✨ சிறப்பம்சங்கள் (Features)</h4>
+        <ul style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.8; padding-left: 18px;">
+          <li>இன்றைய மன்னா (Daily Devotions & Audio Read)</li>
+          <li>சீயோன் இனிய கீதங்கள் (Zion Songs with Search)</li>
+          <li>திருமறைத்திருப் பாடல்கள் (நம்பிக்கையின் கீதங்கள் & பழைய புத்தக வரிசை)</li>
+          <li>Ellen G. White தமிழ் ஆவிக்குரிய புத்தகங்கள் (EGW Library)</li>
+          <li>அகர வரிசை & எண் வரிசை தேடல் (Tamil/Number Search)</li>
+          <li>வாசிப்பு விருப்பங்கள் (Custom Text Size & Controls)</li>
+        </ul>
+      </div>
+
+      <p style="color: var(--text-muted); font-size: 0.82rem; line-height: 1.6;">
+        Web Version PWA 2.0 Modern Edition<br>Built exclusively for Pr. KSM & Seventh-day Adventist Tamil Worshipers.
       </p>
     </div>
   `;

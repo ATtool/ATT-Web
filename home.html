@@ -3,45 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adventist Tamil Tool | தமிழ் அட்வென்டிஸ்ட் ஆராதனை வளங்கள்</title>
 
-  <title>Adventist Tamil Tool</title>
-
-  <!-- Main website stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
+  <div id="toast-container" aria-live="polite"></div>
 
   <div id="app">
-
-    <!-- Website Header -->
     <header class="app-header">
       <div class="header-logo-area">
+        <svg class="header-cross-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10.5 2h3v7h7v3h-7v10h-3V12h-7V9h7V2z"/>
+        </svg>
         <h1 class="app-title">Adventist Tamil Tool</h1>
       </div>
-
-      <p class="app-motto">
-        “Abide in Christ, and be kept by His power.” – DA 324
-      </p>
+      <p class="app-motto">“Abide in Christ, and be kept by His power.” – DA 324</p>
     </header>
 
-
-    <!-- Home Page -->
     <main class="content-container">
-
       <section id="home-page">
-
-        <!-- Home Screen content will be added here -->
-        <div class="home-welcome">
-          <h2>Adventist Tamil Tool</h2>
-          <p>தமிழ் அட்வென்டிஸ்ட் ஆராதனை வளங்கள்</p>
+        <div class="home-welcome card">
+          <h2 style="font-family: var(--font-tamil-title); color: var(--color-primary); margin-bottom: 6px;">Adventist Tamil Tool</h2>
+          <p style="color: var(--text-secondary); font-family: var(--font-tamil-body);">தமிழ் அட்வென்டிஸ்ட் ஆராதனை வளங்கள்</p>
         </div>
-
       </section>
-
     </main>
-
   </div>
-
 </body>
 </html>
