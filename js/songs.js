@@ -443,10 +443,25 @@ function renderBookListView() {
     </div>
 
     <!-- Floating Scroll To Top Button -->
-    <button id="fab-scroll-top" class="fab-scroll" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-      ↑
+    <button id="fab-scroll-top" class="fab-scroll" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
     </button>
   `;
+
+  // Attach scroll listener once to show/hide the button
+  if (!window.hasFabListener) {
+    window.addEventListener('scroll', () => {
+      const fab = document.getElementById('fab-scroll-top');
+      if (fab) {
+        if (window.scrollY > 300) {
+          fab.classList.add('visible');
+        } else {
+          fab.classList.remove('visible');
+        }
+      }
+    });
+    window.hasFabListener = true;
+  }
 }
 
 function onSongSearchInput(val) {
@@ -552,20 +567,28 @@ function toggleCategoryModal() {
   modal.id = 'category-modal';
 
   modal.innerHTML = `
-    <div class="center-card-modal scrollable-card">
-      <div class="modal-card-title">Select Category</div>
-      <div class="category-list-wrap">
+    <div class="category-modal-card">
+      <div class="modal-header-row">
+        <span class="modal-card-title">Select Category</span>
+        <button type="button" class="modal-close-x-btn" onclick="this.closest('#category-modal').remove()">✕</button>
+      </div>
+      <div class="modal-list-scroll">
         ${categories.map(cat => `
-          <div class="category-item-row ${SONGS_STATE.selectedCategory === cat ? 'active' : ''}" onclick="applyCategoryOption('${cat}')">
+          <div class="modal-btn-row ${SONGS_STATE.selectedCategory === cat ? 'selected' : ''}" onclick="applyCategoryOption('${cat.replace(/'/g, "\'")}')">
             ${cat}
           </div>
         `).join('')}
       </div>
-      <div class="modal-cancel-row" onclick="this.closest('#category-modal').remove()">
-        Close
-      </div>
     </div>
   `;
+  
+  // Close modal when clicking outside the card
+  modal.onclick = function(event) {
+    if (event.target === this) {
+      this.remove();
+    }
+  };
+
   document.body.appendChild(modal);
 }
 

@@ -151,10 +151,53 @@ body {
 /* Sticky Search & Chips Header */
 .book-header-sticky {
   position: sticky;
-  top: 70px;
+  top: 80px; /* Sits perfectly under the main header */
   background: var(--bg-primary);
   z-index: 50;
-  padding-bottom: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  /* Pull up and stretch to edges to prevent side/top bleed */
+  margin-top: -16px; 
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-bottom: 1px solid var(--border-color);
+  /* 1st shadow covers any sub-pixel top gap, 2nd gives bottom depth */
+  box-shadow: 0 -15px 0 var(--bg-primary), 0 8px 15px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating Action Button (Scroll to Top) */
+.fab-scroll {
+  position: fixed;
+  bottom: 85px; /* Keeps it above the bottom navigation */
+  right: 20px; /* Positioned at the bottom right */
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--glow-color);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  z-index: 900;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.fab-scroll.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.fab-scroll:active {
+  transform: scale(0.9);
 }
 
 .search-top-row {
@@ -478,20 +521,85 @@ body {
   color: var(--text-primary);
 }
 
-.modal-btn-row {
-  padding: 16px 20px;
+.category-modal-card {
+  background: #12161E;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  width: 88%;
+  max-width: 380px;
+  max-height: calc(100vh - 170px);
+  margin-top: 20px;
+  margin-bottom: 75px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.modal-card-title {
+  font-weight: bold;
+  font-size: 1.05rem;
   color: var(--text-primary);
   font-family: 'Tamil003', sans-serif;
+}
+
+.modal-close-x-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   cursor: pointer;
 }
 
-.modal-cancel-row {
-  padding: 14px;
-  text-align: center;
-  color: #FF3B30;
-  font-weight: bold;
+.modal-close-x-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.modal-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-btn-row {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: 'Tamil003', sans-serif;
+  font-size: 1rem;
+  text-align: left;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.modal-btn-row:last-child {
+  border-bottom: none;
+}
+
+.modal-btn-row:active {
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.modal-btn-row.selected {
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .bottom-sheet-card {
@@ -710,10 +818,53 @@ body {
 /* Sticky Search & Chips Header */
 .book-header-sticky {
   position: sticky;
-  top: 70px;
+  top: 80px; /* Sits perfectly under the main header */
   background: var(--bg-primary);
   z-index: 50;
-  padding-bottom: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  /* Pull up and stretch to edges to prevent side/top bleed */
+  margin-top: -16px; 
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-bottom: 1px solid var(--border-color);
+  /* 1st shadow covers any sub-pixel top gap, 2nd gives bottom depth */
+  box-shadow: 0 -15px 0 var(--bg-primary), 0 8px 15px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating Action Button (Scroll to Top) */
+.fab-scroll {
+  position: fixed;
+  bottom: 85px; /* Keeps it above the bottom navigation */
+  right: 20px; /* Positioned at the bottom right */
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--glow-color);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  z-index: 900;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.fab-scroll.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.fab-scroll:active {
+  transform: scale(0.9);
 }
 
 .search-top-row {
@@ -1037,20 +1188,85 @@ body {
   color: var(--text-primary);
 }
 
-.modal-btn-row {
-  padding: 16px 20px;
+.category-modal-card {
+  background: #12161E;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  width: 88%;
+  max-width: 380px;
+  max-height: calc(100vh - 170px);
+  margin-top: 20px;
+  margin-bottom: 75px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.modal-card-title {
+  font-weight: bold;
+  font-size: 1.05rem;
   color: var(--text-primary);
   font-family: 'Tamil003', sans-serif;
+}
+
+.modal-close-x-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   cursor: pointer;
 }
 
-.modal-cancel-row {
-  padding: 14px;
-  text-align: center;
-  color: #FF3B30;
-  font-weight: bold;
+.modal-close-x-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.modal-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-btn-row {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: 'Tamil003', sans-serif;
+  font-size: 1rem;
+  text-align: left;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.modal-btn-row:last-child {
+  border-bottom: none;
+}
+
+.modal-btn-row:active {
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.modal-btn-row.selected {
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .bottom-sheet-card {
